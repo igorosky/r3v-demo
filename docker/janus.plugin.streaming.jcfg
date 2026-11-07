@@ -1,0 +1,20 @@
+# Replaces the packaged sample mountpoints, which also listen on port 5004.
+general: {
+}
+
+# H.264 from r3v_viewer through ffmpeg (RTP payload type 96).
+r3v: {
+	type = "rtp"
+	id = 1
+	description = "r3v renderer"
+	media = (
+		{
+			type = "video"
+			mid = "v"
+			port = 5004
+			pt = 96
+			codec = "h264"
+			fmtp = "profile-level-id=42e02a;packetization-mode=1"
+		}
+	)
+}

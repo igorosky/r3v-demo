@@ -1,0 +1,60 @@
+# The simulation, Janus and web viewer. Run from this directory: docker compose up --build
+# GUI=1 docker compose up adds Gazebo's GUI and RViz at http://localhost:6080/vnc.html.
+# PATROL=0 docker compose up leaves the robot standing, for teleop.
+# VIEWER=0 docker compose up leaves out r3v_viewer.
+services:
+  sim:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      additional_contexts:
+        renderer: ${R3V_RENDERER:-./r3v-renderer}
+        voxelizer: ${R3V_VOXELIZER:-./r3v-voxelizer}
+    image: r3v-sim
+    init: true
+    depends_on:
+      - janus
+    environment:
+      GUI: ${GUI:-0}
+      PATROL: ${PATROL:-1}
+      VIEWER: ${VIEWER:-1}
+      RTP_URL: rtp://janus:5004?pkt_size=1200
+      VOXELIZER_BACKEND: ${VOXELIZER_BACKEND:-single_threaded}
+      VOXELIZER_THREADS: ${VOXELIZER_THREADS:-0}
+      VOXELIZER_WGPU_BUCKET_COUNT: ${VOXELIZER_WGPU_BUCKET_COUNT:-131072}
+    ports:
+      # rosbridge, for web pages.
+      - "9090:9090"
+      - "6080:6080"
+
+  # HTTP API on 8088, RTP input on 5004/udp, WebRTC on 10000-10050/udp.
+  janus:
+    image: sucwangsr/janus-webrtc-gateway-docker:1.4.1-muti
+    ports:
+      - "8088:8088"
+      - "5004:5004/udp"
+      - "10000-10050:10000-10050/udp"
+    volumes:
+      - ./docker/janus.plugin.streaming.jcfg:/usr/local/etc/janus/janus.plugin.streaming.jcfg:ro
+    # Advertise the host address so browsers can reach the published WebRTC ports.
+    command:
+      - janus
+      - --nat-1-1=${JANUS_PUBLIC_IP:-127.0.0.1}
+      - --rtp-port-range=10000-10050
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      additional_contexts:
+        web: ${R3V_WEB:-./r3v-web}
+    image: r3v-sim-web
+    init: true
+    depends_on:
+      - sim
+      - janus
+    environment:
+      JANUS_URL: http://janus:8088
+      ROSBRIDGE_URL: ws://sim:9090
+    ports:
+      - "5173:5173"

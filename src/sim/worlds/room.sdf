@@ -1,0 +1,313 @@
+<?xml version="1.0"?>
+<!--
+  A 12 x 12 m room with static obstacles and two moving ones:
+  - revolving_door at (3, 3): four wings spinning at 0.4 rad/s from the start, no commands needed;
+  - cart at (-2, -3): a box sliding along x on a rail, following /sim/cart/cmd_pos (the oscillator
+    node sends a sine).
+  The robot is spawned by the launch file. The world origin is the robot's odom frame.
+
+  The lidar's intensity is the laser_retro of the visual a ray hits, 0 without one: 50 for the
+  ground, 80 for the walls, 120 for the static obstacles and 200 for the moving ones.
+-->
+<sdf version="1.10">
+  <world name="room">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.75 0.78 0.82 1</background>
+      <grid>false</grid>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.4 0.3 -1</direction>
+    </light>
+
+    <model name="ground">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <laser_retro>50</laser_retro>
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <material><ambient>0.55 0.55 0.52 1</ambient><diffuse>0.55 0.55 0.52 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="walls">
+      <static>true</static>
+      <link name="link">
+        <collision name="north_collision">
+          <pose>0 6 1 0 0 0</pose>
+          <geometry><box><size>12.2 0.2 2</size></box></geometry>
+        </collision>
+        <visual name="north">
+          <laser_retro>80</laser_retro>
+          <pose>0 6 1 0 0 0</pose>
+          <geometry><box><size>12.2 0.2 2</size></box></geometry>
+          <material><ambient>0.85 0.83 0.78 1</ambient><diffuse>0.85 0.83 0.78 1</diffuse></material>
+        </visual>
+        <collision name="south_collision">
+          <pose>0 -6 1 0 0 0</pose>
+          <geometry><box><size>12.2 0.2 2</size></box></geometry>
+        </collision>
+        <visual name="south">
+          <laser_retro>80</laser_retro>
+          <pose>0 -6 1 0 0 0</pose>
+          <geometry><box><size>12.2 0.2 2</size></box></geometry>
+          <material><ambient>0.85 0.83 0.78 1</ambient><diffuse>0.85 0.83 0.78 1</diffuse></material>
+        </visual>
+        <collision name="east_collision">
+          <pose>6 0 1 0 0 0</pose>
+          <geometry><box><size>0.2 12.2 2</size></box></geometry>
+        </collision>
+        <visual name="east">
+          <laser_retro>80</laser_retro>
+          <pose>6 0 1 0 0 0</pose>
+          <geometry><box><size>0.2 12.2 2</size></box></geometry>
+          <material><ambient>0.85 0.83 0.78 1</ambient><diffuse>0.85 0.83 0.78 1</diffuse></material>
+        </visual>
+        <collision name="west_collision">
+          <pose>-6 0 1 0 0 0</pose>
+          <geometry><box><size>0.2 12.2 2</size></box></geometry>
+        </collision>
+        <visual name="west">
+          <laser_retro>80</laser_retro>
+          <pose>-6 0 1 0 0 0</pose>
+          <geometry><box><size>0.2 12.2 2</size></box></geometry>
+          <material><ambient>0.85 0.83 0.78 1</ambient><diffuse>0.85 0.83 0.78 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="shelf">
+      <static>true</static>
+      <pose>-5.6 0 0.8 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.4 3 1.6</size></box></geometry></collision>
+        <visual name="visual">
+          <laser_retro>120</laser_retro>
+          <geometry><box><size>0.4 3 1.6</size></box></geometry>
+          <material><ambient>0.45 0.32 0.2 1</ambient><diffuse>0.45 0.32 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="crate_a">
+      <static>true</static>
+      <pose>-3.5 3 0.3 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.6 0.6 0.6</size></box></geometry></collision>
+        <visual name="visual">
+          <laser_retro>120</laser_retro>
+          <geometry><box><size>0.6 0.6 0.6</size></box></geometry>
+          <material><ambient>0.7 0.5 0.25 1</ambient><diffuse>0.7 0.5 0.25 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="crate_b">
+      <static>true</static>
+      <pose>4 -1 0.2 0 0 0.4</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.5 0.8 0.4</size></box></geometry></collision>
+        <visual name="visual">
+          <laser_retro>120</laser_retro>
+          <geometry><box><size>0.5 0.8 0.4</size></box></geometry>
+          <material><ambient>0.7 0.5 0.25 1</ambient><diffuse>0.7 0.5 0.25 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="crate_c">
+      <static>true</static>
+      <pose>0.4 0.2 0.25 0 0 0.8</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.5 0.5 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <laser_retro>120</laser_retro>
+          <geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+          <material><ambient>0.7 0.5 0.25 1</ambient><diffuse>0.7 0.5 0.25 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="pillar">
+      <static>true</static>
+      <pose>0 3.8 1 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><cylinder><radius>0.25</radius><length>2</length></cylinder></geometry></collision>
+        <visual name="visual">
+          <laser_retro>120</laser_retro>
+          <geometry><cylinder><radius>0.25</radius><length>2</length></cylinder></geometry>
+          <material><ambient>0.6 0.6 0.62 1</ambient><diffuse>0.6 0.6 0.62 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="table">
+      <static>true</static>
+      <pose>3.5 -3.8 0 0 0 0</pose>
+      <link name="link">
+        <collision name="top_collision">
+          <pose>0 0 0.74 0 0 0</pose>
+          <geometry><box><size>1.2 0.8 0.04</size></box></geometry>
+        </collision>
+        <visual name="top">
+          <laser_retro>120</laser_retro>
+          <pose>0 0 0.74 0 0 0</pose>
+          <geometry><box><size>1.2 0.8 0.04</size></box></geometry>
+          <material><ambient>0.5 0.36 0.22 1</ambient><diffuse>0.5 0.36 0.22 1</diffuse></material>
+        </visual>
+        <collision name="leg_1_collision">
+          <pose>0.55 0.35 0.36 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+        </collision>
+        <visual name="leg_1">
+          <laser_retro>120</laser_retro>
+          <pose>0.55 0.35 0.36 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+        </visual>
+        <collision name="leg_2_collision">
+          <pose>-0.55 0.35 0.36 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+        </collision>
+        <visual name="leg_2">
+          <laser_retro>120</laser_retro>
+          <pose>-0.55 0.35 0.36 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+        </visual>
+        <collision name="leg_3_collision">
+          <pose>0.55 -0.35 0.36 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+        </collision>
+        <visual name="leg_3">
+          <laser_retro>120</laser_retro>
+          <pose>0.55 -0.35 0.36 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+        </visual>
+        <collision name="leg_4_collision">
+          <pose>-0.55 -0.35 0.36 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+        </collision>
+        <visual name="leg_4">
+          <laser_retro>120</laser_retro>
+          <pose>-0.55 -0.35 0.36 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 0.72</size></box></geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="revolving_door">
+      <pose>3 3 0 0 0 0</pose>
+      <link name="post">
+        <visual name="visual">
+          <laser_retro>200</laser_retro>
+          <pose>0 0 0.8 0 0 0</pose>
+          <geometry><cylinder><radius>0.06</radius><length>1.6</length></cylinder></geometry>
+          <material><ambient>0.3 0.3 0.3 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
+        </visual>
+        <inertial><mass>10</mass></inertial>
+      </link>
+      <link name="wings">
+        <pose>0 0 0.8 0 0 0</pose>
+        <collision name="wing_x_collision"><geometry><box><size>2 0.06 1.4</size></box></geometry></collision>
+        <visual name="wing_x">
+          <laser_retro>200</laser_retro>
+          <geometry><box><size>2 0.06 1.4</size></box></geometry>
+          <material><ambient>0.2 0.6 0.4 1</ambient><diffuse>0.2 0.6 0.4 1</diffuse></material>
+        </visual>
+        <collision name="wing_y_collision"><geometry><box><size>0.06 2 1.4</size></box></geometry></collision>
+        <visual name="wing_y">
+          <laser_retro>200</laser_retro>
+          <geometry><box><size>0.06 2 1.4</size></box></geometry>
+          <material><ambient>0.2 0.6 0.4 1</ambient><diffuse>0.2 0.6 0.4 1</diffuse></material>
+        </visual>
+        <inertial>
+          <mass>20</mass>
+          <inertia><ixx>6.7</ixx><iyy>6.7</iyy><izz>6.7</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia>
+        </inertial>
+      </link>
+      <joint name="anchor" type="fixed">
+        <parent>world</parent>
+        <child>post</child>
+      </joint>
+      <joint name="spin" type="revolute">
+        <parent>post</parent>
+        <child>wings</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit><lower>-1e16</lower><upper>1e16</upper></limit>
+        </axis>
+      </joint>
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>spin</joint_name>
+        <topic>/sim/revolving_door/cmd_vel</topic>
+        <initial_velocity>0.4</initial_velocity>
+      </plugin>
+    </model>
+
+    <model name="cart">
+      <pose>-2 -3 0 0 0 0</pose>
+      <link name="rail">
+        <visual name="visual">
+          <laser_retro>200</laser_retro>
+          <pose>0 0 0.005 0 0 0</pose>
+          <geometry><box><size>4.2 0.1 0.01</size></box></geometry>
+          <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+        <inertial><mass>10</mass></inertial>
+      </link>
+      <link name="body">
+        <pose>0 0 0.42 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.8 0.6 0.8</size></box></geometry></collision>
+        <visual name="visual">
+          <laser_retro>200</laser_retro>
+          <geometry><box><size>0.8 0.6 0.8</size></box></geometry>
+          <material><ambient>0.8 0.2 0.2 1</ambient><diffuse>0.8 0.2 0.2 1</diffuse></material>
+        </visual>
+        <inertial>
+          <mass>15</mass>
+          <inertia><ixx>1.25</ixx><iyy>1.6</iyy><izz>1.25</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia>
+        </inertial>
+      </link>
+      <joint name="anchor" type="fixed">
+        <parent>world</parent>
+        <child>rail</child>
+      </joint>
+      <joint name="slide" type="prismatic">
+        <parent>rail</parent>
+        <child>body</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <!-- Velocity commands respect the position limits only with an effort limit. -->
+          <limit><lower>-1.6</lower><upper>1.6</upper><effort>1e6</effort></limit>
+        </axis>
+      </joint>
+      <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
+        <joint_name>slide</joint_name>
+        <topic>/sim/cart/cmd_pos</topic>
+        <use_velocity_commands>true</use_velocity_commands>
+        <p_gain>3.0</p_gain>
+        <cmd_max>1.5</cmd_max>
+        <cmd_min>-1.5</cmd_min>
+      </plugin>
+    </model>
+  </world>
+</sdf>

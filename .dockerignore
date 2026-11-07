@@ -1,0 +1,11 @@
+.git
+**/.git
+**/target
+**/node_modules
+**/dist
+.DS_Store
+
+# Dependencies are sent as separate build contexts.
+r3v-renderer
+r3v-voxelizer
+r3v-web
